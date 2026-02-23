@@ -1,3 +1,4 @@
+import time
 import pyautogui # type: ignore
 import sys
 
@@ -8,6 +9,7 @@ class GestureActions:
         self.screen_width, self.screen_height = pyautogui.size()
         self.prev_x = None
         self.prev_y = None
+        self.last_click_time = 0
 
     def execute(self, gesture, landmarks=None):
 
@@ -31,6 +33,11 @@ class GestureActions:
         elif gesture == "EXIT":
             print("Punho mantido por 1 segundo. Fechando...")
             sys.exit()
+        elif gesture == "CLICK":
+            current_time = time.time()
+            if current_time - self.last_click_time > 0.8:
+                pyautogui.click()
+                self.last_click_time = current_time
 
     def reset_mouse(self):
         self.prev_x = None
