@@ -1,8 +1,11 @@
 import cv2
-from hand_tracker import HandTracker
+import time
+from hand_tracker import HandTracker, is_fist
 
 cap = cv2.VideoCapture(0)
 tracker = HandTracker(max_hands=2)
+
+fist_start = None  # precisa estar fora do loop
 
 while True:
     ret, frame = cap.read()
@@ -13,8 +16,21 @@ while True:
 
     hands = tracker.process(frame)
 
+    # desenha landmarks
+    tracker.draw(frame, hands)
+
+    # 🔥 DETECÇÃO DO GESTO (AGORA NO LUGAR CERTO)
     for hand in hands:
-        print(hand["label"])  # só pra testar
+        if is_fist(hand["landmarks"]):
+            if fist_start is None:
+                fist_start = time.time()
+            elif time.time() - fist_start > 1.0:
+                print("Punho mantido por 1 segundo. Fechando...")
+                cap.release()
+                cv2.destroyAllWindows()
+                exit()
+        else:
+            fist_start = None
 
     cv2.imshow("Hand Tracking", frame)
 
