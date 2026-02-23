@@ -1,6 +1,7 @@
 import math
 import time
 
+
 class GestureRecognizer:
 
     def __init__(self):
@@ -27,7 +28,6 @@ class GestureRecognizer:
         pinky_down = pinky_tip[1] > pinky_base[1]
 
         return index_up and middle_down and ring_down and pinky_down
-
 
     def is_fist(self, landmarks):
 
@@ -61,10 +61,9 @@ class GestureRecognizer:
 
         return closed_fingers >= 3
 
-
     def recognize(self, landmarks):
 
-        # 🎯 Primeiro verifica punho segurado por 1s
+        # Punho segurado por 1 segundo → sair
         if self.is_fist(landmarks):
 
             if self.fist_start_time is None:
@@ -76,7 +75,7 @@ class GestureRecognizer:
         else:
             self.fist_start_time = None
 
-        # 🎯 Movimento de mouse
+        # Movimento de mouse
         if self.is_index_only(landmarks):
             return "MOVE_MOUSE"
 

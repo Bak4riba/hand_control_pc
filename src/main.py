@@ -1,37 +1,46 @@
 import cv2
 import pyautogui
+
 from hand_tracker import HandTracker
 from gesture_recognizer import GestureRecognizer
 from gesture_actions import GestureActions
 
 pyautogui.FAILSAFE = False
 
-cap = cv2.VideoCapture(0)
+def main():
 
-tracker = HandTracker(max_hands=2)
-recognizer = GestureRecognizer()
-actions = GestureActions()
+    cap = cv2.VideoCapture(0)
 
-while True:
-    ret, frame = cap.read()
-    if not ret:
-        break
+    tracker = HandTracker(max_hands=1)
+    recognizer = GestureRecognizer()
+    actions = GestureActions()
 
-    frame = cv2.flip(frame, 1)
+    while True:
+        ret, frame = cap.read()
+        if not ret:
+            break
 
-    hands = tracker.process(frame)
-    tracker.draw(frame, hands)
+        frame = cv2.flip(frame, 1)
 
-    for hand in hands:
+        hands = tracker.process(frame)
+        tracker.draw(frame, hands)
 
-        gesture = recognizer.recognize(hand["landmarks"])
+        gesture_detected = None
 
-        if gesture:
-            actions.execute(gesture, hand["landmarks"])
+        for hand in hands:
+            gesture = recognizer.recognize(hand["landmarks"])
+            if gesture:
+                gesture_detected = gesture
+                actions.execute(gesture, hand["landmarks"])
 
+        # Se nenhum gesto ativo → resetar movimento
+        if not gesture_detected:
+            actions.reset_mouse()
+
+        if gesture_detected:
             cv2.putText(
                 frame,
-                f"Gesto: {gesture}",
+                f"Gesto: {gesture_detected}",
                 (10, 50),
                 cv2.FONT_HERSHEY_SIMPLEX,
                 1,
@@ -39,10 +48,14 @@ while True:
                 2
             )
 
-    cv2.imshow("Hand Control PC", frame)
+        cv2.imshow("Hand Control PC", frame)
 
-    if cv2.waitKey(1) & 0xFF == 27:
-        break
+        if cv2.waitKey(1) & 0xFF == 27:
+            break
 
-cap.release()
-cv2.destroyAllWindows()
+    cap.release()
+    cv2.destroyAllWindows()
+
+
+if __name__ == "__main__":
+    main()
