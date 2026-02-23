@@ -1,4 +1,4 @@
-```markdown
+
 # 🖐️ Hand Control PC
 
 Controle o mouse do computador utilizando gestos da mão através da webcam.
@@ -164,6 +164,3 @@ Demonstrar aplicação prática de:
 ## 📜 Licença
 
 MIT License
-
-```
-```
