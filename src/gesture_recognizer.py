@@ -19,7 +19,7 @@ class GestureRecognizer:
             (thumb_tip[0] - index_tip[0])**2 +
             (thumb_tip[1] - index_tip[1])**2
         )
-        print(f"Distância entre polegar e indicador no movimento de pinça: {dist:.4f}")
+       # print(f"Distância entre polegar e indicador no movimento de pinça: {dist:.4f}")
 
         return dist < 0.04  # ajuste fino depois
 
@@ -75,19 +75,19 @@ class GestureRecognizer:
 
             if dist_norm < 0.09:
                 closed_fingers += 1
-        print(f"Distância entre polegar e indicador: {dist_norm:.4f}")
+       # print(f"Distância entre polegar e indicador: {dist_norm:.4f}")
 
         return closed_fingers >= 3
 
     def recognize(self, landmarks):
 
         if self.is_fist(landmarks):
-            print("Punho detectado! Verificando tempo de segurar...")
+            #print("Punho detectado! Verificando tempo de segurar...")
             return "EXIT"
 
         if self.is_pinch(landmarks) and self.is_index_only(landmarks):
-            print("Pinça detectada! Executando clique...")
-            print(f"Landmarks: {landmarks[4]}, {landmarks[8]}")  # Debug dos pontos da pinça
+            #print("Pinça detectada! Executando clique...")
+            #print(f"Landmarks: {landmarks[4]}, {landmarks[8]}")  # Debug dos pontos da pinça
             return "CLICK"    
 
         elif self.is_index_only(landmarks):
