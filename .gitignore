@@ -1,1 +1,17 @@
 __pycache__/hand_tracker.cpython-311.pyc
+
+# Byte-compiled
+__pycache__/
+*.pyc
+*.pyo
+
+# Virtual environment
+venv/
+.env/
+
+# VSCode
+.vscode/
+
+# OS
+.DS_Store
+Thumbs.db
