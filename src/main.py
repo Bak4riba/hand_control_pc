@@ -1,5 +1,5 @@
-import cv2
-import pyautogui
+import cv2 # type: ignore
+import pyautogui # type: ignore
 
 from hand_tracker import HandTracker
 from gesture_recognizer import GestureRecognizer
