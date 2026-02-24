@@ -5,6 +5,21 @@ from hand_tracker import HandTracker
 from gesture_recognizer import GestureRecognizer
 from gesture_actions import GestureActions
 
+#########################Variaveis para calibração do mouse (ajustável)#########################
+calibrating = False
+calibration_start = None
+open_hand_start = None
+
+calib_points_x = []
+calib_points_y = []
+
+calib_min_x = 0
+calib_max_x = 1
+calib_min_y = 0
+calib_max_y = 1
+###########################################################################################################
+
+
 pyautogui.FAILSAFE = False
 
 def main():

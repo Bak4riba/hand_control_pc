@@ -92,4 +92,23 @@ class GestureRecognizer:
 
         elif self.is_index_only(landmarks):
                     return "MOVE_MOUSE"
+    def is_open_hand(self, landmarks):
+
+            fingers = [
+                (8, 5),    # index
+                (12, 9),   # middle
+                (16, 13),  # ring
+                (20, 17)   # pinky
+            ]
+
+            open_count = 0
+
+            for tip_id, base_id in fingers:
+                tip = landmarks[tip_id]
+                base = landmarks[base_id]
+
+                if tip[1] < base[1]:  # dedo levantado
+                    open_count += 1
+
+            return open_count >= 4
 
