@@ -1,89 +1,125 @@
+   
 import math
 
 
 class GestureRecognizer:
 
-    # ---------------- PINÇA (CLICK) ----------------
-    def is_pinch(self, landmarks):
+    def __init__(self):
+        self.last_gesture = None
+        self.gesture_frames = 0
+        self.confirmation_frames = 2  # exige 3 frames iguais
 
+    # ======================================================
+    # UTILIDADES
+    # ======================================================
+
+    def _distance(self, p1, p2):
+        return math.sqrt(
+            (p1[0] - p2[0]) ** 2 +
+            (p1[1] - p2[1]) ** 2
+        )
+
+    def _hand_size(self, landmarks):
+        wrist = landmarks[0]
+        middle_mcp = landmarks[9]
+        return self._distance(wrist, middle_mcp)
+
+    # ======================================================
+    # PINÇA (CLICK)
+    # ======================================================
+
+    def is_pinch(self, landmarks):
         thumb_tip = landmarks[4]
         index_tip = landmarks[8]
 
-        dist = math.sqrt(
-            (thumb_tip[0] - index_tip[0])**2 +
-            (thumb_tip[1] - index_tip[1])**2
-        )
+        dist = self._distance(thumb_tip, index_tip)
+        hand_size = self._hand_size(landmarks)
 
-        return dist < 0.04
+        return (dist / hand_size) < 0.3
 
+    # ======================================================
+    # INDICADOR LEVANTADO (MOVE)
+    # ======================================================
 
-    # ---------------- INDICADOR LEVANTADO ----------------
     def is_index_only(self, landmarks):
 
-        index_tip = landmarks[8]
-        index_base = landmarks[5]
+        def finger_up(tip_id, base_id):
+            return landmarks[tip_id][1] < landmarks[base_id][1]
 
-        middle_tip = landmarks[12]
-        middle_base = landmarks[9]
+        def finger_down(tip_id, base_id):
+            return landmarks[tip_id][1] > landmarks[base_id][1]
 
-        ring_tip = landmarks[16]
-        ring_base = landmarks[13]
-
-        pinky_tip = landmarks[20]
-        pinky_base = landmarks[17]
-
-        index_up = index_tip[1] < index_base[1]
-        middle_down = middle_tip[1] > middle_base[1]
-        ring_down = ring_tip[1] > ring_base[1]
-        pinky_down = pinky_tip[1] > pinky_base[1]
+        index_up = finger_up(8, 5)
+        middle_down = finger_down(12, 9)
+        ring_down = finger_down(16, 13)
+        pinky_down = finger_down(20, 17)
 
         return index_up and middle_down and ring_down and pinky_down
 
+    # ======================================================
+    # PUNHO FECHADO (EXIT)
+    # ======================================================
 
-    # ---------------- PUNHO FECHADO ----------------
     def is_fist(self, landmarks):
 
         fingertip_ids = [8, 12, 16, 20]
         finger_base_ids = [5, 9, 13, 17]
 
-        wrist = landmarks[0]
-        middle_mcp = landmarks[9]
+        hand_size = self._hand_size(landmarks)
 
-        hand_size = math.sqrt(
-            (wrist[0] - middle_mcp[0])**2 +
-            (wrist[1] - middle_mcp[1])**2
-        )
-
-        closed_fingers = 0
+        closed = 0
 
         for tip_id, base_id in zip(fingertip_ids, finger_base_ids):
-
             tip = landmarks[tip_id]
             base = landmarks[base_id]
 
-            dist = math.sqrt(
-                (tip[0] - base[0])**2 +
-                (tip[1] - base[1])**2
-            )
+            dist = self._distance(tip, base)
 
-            dist_norm = dist / hand_size
+            if (dist / hand_size) < 0.18:
+                closed += 1
 
-            if dist_norm < 0.09:
-                closed_fingers += 1
+        return closed >= 3
 
-        return closed_fingers >= 3
+    # ======================================================
+    # CLICK COMPLETO (pinça + outros dedos abaixados)
+    # ======================================================
 
+    def is_click(self, landmarks):
 
-    # ---------------- PRIORIDADE DOS GESTOS ----------------
+        pinch = self.is_pinch(landmarks)
+
+        middle_down = landmarks[12][1] > landmarks[9][1]
+        ring_down = landmarks[16][1] > landmarks[13][1]
+        pinky_down = landmarks[20][1] > landmarks[17][1]
+
+        return pinch and middle_down and ring_down and pinky_down
+
+    # ======================================================
+    # RECONHECIMENTO COM CONFIRMAÇÃO TEMPORAL
+    # ======================================================
+
     def recognize(self, landmarks):
 
+        gesture = None
+
+        # Ordem de prioridade
         if self.is_fist(landmarks):
-            return "EXIT"
+            gesture = "EXIT"
 
-        if self.is_pinch(landmarks) and self.is_index_only(landmarks):
-            return "CLICK"
+        elif self.is_click(landmarks):
+            gesture = "CLICK"
 
-        if self.is_index_only(landmarks):
-            return "MOVE_MOUSE"
+        elif self.is_index_only(landmarks):
+            gesture = "MOVE_MOUSE"
+
+        # ---------------- CONFIRMAÇÃO POR FRAMES ----------------
+        if gesture == self.last_gesture:
+            self.gesture_frames += 1
+        else:
+            self.gesture_frames = 0
+            self.last_gesture = gesture
+
+        if self.gesture_frames >= self.confirmation_frames:
+            return gesture
 
         return None
