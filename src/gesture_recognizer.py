@@ -1,15 +1,9 @@
 import math
-import time
 
 
 class GestureRecognizer:
 
-    def __init__(self):
-        self.fist_start_time = None
-        self.fist_hold_time = 1.0  # segundos segurando punho
-
-    # Funções de reconhecimento de gestos
-    # Função pinça para clicar
+    # ---------------- PINÇA (CLICK) ----------------
     def is_pinch(self, landmarks):
 
         thumb_tip = landmarks[4]
@@ -19,11 +13,11 @@ class GestureRecognizer:
             (thumb_tip[0] - index_tip[0])**2 +
             (thumb_tip[1] - index_tip[1])**2
         )
-       # print(f"Distância entre polegar e indicador no movimento de pinça: {dist:.4f}")
 
-        return dist < 0.04  # ajuste fino depois
+        return dist < 0.04
 
-    #Função indicador está levantado
+
+    # ---------------- INDICADOR LEVANTADO ----------------
     def is_index_only(self, landmarks):
 
         index_tip = landmarks[8]
@@ -44,8 +38,9 @@ class GestureRecognizer:
         pinky_down = pinky_tip[1] > pinky_base[1]
 
         return index_up and middle_down and ring_down and pinky_down
-   
-    #Função punho fechado para sair do programa
+
+
+    # ---------------- PUNHO FECHADO ----------------
     def is_fist(self, landmarks):
 
         fingertip_ids = [8, 12, 16, 20]
@@ -75,40 +70,20 @@ class GestureRecognizer:
 
             if dist_norm < 0.09:
                 closed_fingers += 1
-       # print(f"Distância entre polegar e indicador: {dist_norm:.4f}")
 
         return closed_fingers >= 3
 
+
+    # ---------------- PRIORIDADE DOS GESTOS ----------------
     def recognize(self, landmarks):
 
         if self.is_fist(landmarks):
-            #print("Punho detectado! Verificando tempo de segurar...")
             return "EXIT"
 
         if self.is_pinch(landmarks) and self.is_index_only(landmarks):
-            #print("Pinça detectada! Executando clique...")
-            #print(f"Landmarks: {landmarks[4]}, {landmarks[8]}")  # Debug dos pontos da pinça
-            return "CLICK"    
+            return "CLICK"
 
-        elif self.is_index_only(landmarks):
-                    return "MOVE_MOUSE"
-    def is_open_hand(self, landmarks):
+        if self.is_index_only(landmarks):
+            return "MOVE_MOUSE"
 
-            fingers = [
-                (8, 5),    # index
-                (12, 9),   # middle
-                (16, 13),  # ring
-                (20, 17)   # pinky
-            ]
-
-            open_count = 0
-
-            for tip_id, base_id in fingers:
-                tip = landmarks[tip_id]
-                base = landmarks[base_id]
-
-                if tip[1] < base[1]:  # dedo levantado
-                    open_count += 1
-
-            return open_count >= 4
-
+        return None

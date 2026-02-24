@@ -1,5 +1,5 @@
-import cv2 # type: ignore
-import mediapipe as mp # type: ignore
+import cv2  # type: ignore
+import mediapipe as mp  # type: ignore
 
 
 class HandTracker:
