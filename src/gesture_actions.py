@@ -5,22 +5,32 @@ import pyautogui  # type: ignore
 class GestureActions:
 
     def __init__(self):
+
+        # ---------------- TELA ----------------
         self.screen_width, self.screen_height = pyautogui.size()
 
+        # ---------------- ESTADO DO MOUSE ----------------
         self.prev_x = None
         self.prev_y = None
 
+        # ---------------- CLICK ----------------
         self.last_click_time = 0
         self.click_cooldown = 0.8
-
         self.block_move_until = 0
 
+        # ---------------- SUAVIZAÇÃO ----------------
         self.base_alpha = 0.25
         self.fast_alpha = 0.6
-
         self.dead_zone = 3  # pixels
 
-        self.invert_y = True  # inverter eixo Y se necessário
+        # ---------------- INVERSÃO DE EIXOS ----------------
+        self.invert_x = False
+        self.invert_y = False
+
+        # ---------------- CAIXA DE NAVEGAÇÃO (ROI) ----------------
+        self.nav_box_width = 0.4   # 40% da largura da imagem
+        self.nav_box_height = 0.4  # 40% da altura da imagem
+
 
     # ======================================================
     # EXECUTOR PRINCIPAL
@@ -35,7 +45,8 @@ class GestureActions:
             self._click()
 
         elif gesture == "EXIT":
-            raise SystemExit  # saída limpa
+            raise SystemExit
+
 
     # ======================================================
     # MOVIMENTO DO MOUSE
@@ -43,16 +54,23 @@ class GestureActions:
 
     def _move_mouse(self, landmarks):
 
-        # Bloqueia movimento logo após clique
+        # Bloqueio após clique
         if time.time() < self.block_move_until:
             return
 
         tip = landmarks[8]
 
-        # ---------------- ZONA ATIVA ----------------
-        x_min, x_max = 0.2, 0.8
-        y_min, y_max = 0.2, 0.8
+        # ---------------- CALCULAR CAIXA CENTRAL ----------------
+        box_w = self.nav_box_width
+        box_h = self.nav_box_height
 
+        x_min = 0.5 - box_w / 2
+        x_max = 0.5 + box_w / 2
+
+        y_min = 0.5 - box_h / 2
+        y_max = 0.5 + box_h / 2
+
+        # ---------------- BLOQUEAR FORA DA CAIXA ----------------
         if (
             tip[0] < x_min or tip[0] > x_max or
             tip[1] < y_min or tip[1] > y_max
@@ -60,17 +78,19 @@ class GestureActions:
             self.reset_mouse()
             return
 
-        # ---------------- NORMALIZAÇÃO ----------------
+        # ---------------- NORMALIZAÇÃO DENTRO DA CAIXA ----------------
         x_norm = (tip[0] - x_min) / (x_max - x_min)
         y_norm = (tip[1] - y_min) / (y_max - y_min)
+
+        # ---------------- INVERSÃO OPCIONAL ----------------
+        if self.invert_x:
+            x_norm = 1 - x_norm
 
         if self.invert_y:
             y_norm = 1 - y_norm
 
         current_x = x_norm * self.screen_width
         current_y = y_norm * self.screen_height
-
-        current_y = self.screen_height - (y_norm * self.screen_height)
 
         # Primeira leitura
         if self.prev_x is None or self.prev_y is None:
@@ -99,6 +119,7 @@ class GestureActions:
             self.prev_x = smooth_x
             self.prev_y = smooth_y
 
+
     # ======================================================
     # CLICK
     # ======================================================
@@ -111,8 +132,9 @@ class GestureActions:
             pyautogui.click()
             self.last_click_time = current_time
 
-            # Bloqueia movimento por 200ms após clique
+            # Bloqueia movimento por 200ms
             self.block_move_until = current_time + 0.2
+
 
     # ======================================================
     # RESET

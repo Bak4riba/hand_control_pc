@@ -22,6 +22,23 @@ def main():
             break
 
         frame = cv2.flip(frame, 1)
+        h, w, _ = frame.shape
+
+        box_w = actions.nav_box_width
+        box_h = actions.nav_box_height
+
+        x_min = 0.5 - box_w / 2
+        x_max = 0.5 + box_w / 2
+        y_min = 0.5 - box_h / 2
+        y_max = 0.5 + box_h / 2
+
+        start_x = int(x_min * w)
+        end_x = int(x_max * w)
+        start_y = int(y_min * h)
+        end_y = int(y_max * h)
+
+        cv2.rectangle(frame, (start_x, start_y), (end_x, end_y), (0, 255, 0), 2)
+
 
         hands = tracker.process(frame)
         tracker.draw(frame, hands)
